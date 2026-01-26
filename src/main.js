@@ -24,17 +24,31 @@ document.addEventListener('DOMContentLoaded', function() {
         .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
         .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+        // Configure arcs for route lines
+        .arcsData([])
+        .arcStartLat('startLat')
+        .arcStartLng('startLng')
+        .arcEndLat('endLat')
+        .arcEndLng('endLng')
+        .arcColor(d => d.visible ? ['#F86A28', '#FFD700'] : ['rgba(248,106,40,0.2)', 'rgba(255,215,0,0.2)'])
+        .arcAltitude(0.15)
+        .arcStroke(0.5)
+        .arcDashLength(0.4)
+        .arcDashGap(0.2)
+        .arcDashAnimateTime(2000)
+        .arcLabel(d => `Route ${d.index}<br>From: ${d.startLat.toFixed(2)}, ${d.startLng.toFixed(2)}<br>To: ${d.endLat.toFixed(2)}, ${d.endLng.toFixed(2)}`)
+        // Configure points for origins without destinations
         .pointsData([])
         .pointLat('lat')
         .pointLng('lng')
         .pointAltitude(0)
-        .pointRadius(0.3)
-        .pointColor(d => d.visible ? '#F86A28' : 'rgba(248,106,40,0.3)')
+        .pointRadius(0.4)
+        .pointColor(d => d.visible ? '#F86A28' : 'rgba(248,106,40,0.2)')
         .pointLabel(d => `Route Origin ${d.index}<br>Lat: ${d.lat.toFixed(4)}, Lng: ${d.lng.toFixed(4)}`)
         (globeContainer);
 
     // Set initial view
-    globe.pointOfView({ lat: 20, lng: 100, altitude: 0.8 });
+    globe.pointOfView({ lat: 20, lng: 100, altitude: 1.5 });
 
     // Very slow auto-rotation
     const controls = globe.controls();
@@ -42,9 +56,11 @@ document.addEventListener('DOMContentLoaded', function() {
     controls.autoRotateSpeed = 0.1;
     controls.enableZoom = true;
 
-    // Track points data and blink interval
+    // Track arcs data, points data, and blink interval
+    let arcsData = [];
     let pointsData = [];
     let blinkInterval = null;
+    let blinkTimeout = null;
 
     // Get total count of all route_planned_events
     async function getTotalRouteCount() {
@@ -73,39 +89,108 @@ document.addEventListener('DOMContentLoaded', function() {
                 `<span class="text-brand-primary text-lg font-semibold">Total routes planned with VoltPilot: </span><span class="text-white text-xl font-bold">${totalCount.toLocaleString()}</span>`;
 
             if (!snapshot.empty) {
-                // Clear previous blink interval
+                // Clear previous blink interval and timeout
                 if (blinkInterval) {
                     clearInterval(blinkInterval);
+                    blinkInterval = null;
+                }
+                if (blinkTimeout) {
+                    clearTimeout(blinkTimeout);
+                    blinkTimeout = null;
                 }
 
-                // Create points data for pins
-                pointsData = snapshot.docs.map((doc, index) => {
+                // Reset data arrays
+                arcsData = [];
+                pointsData = [];
+
+                // Process each route document
+                snapshot.docs.forEach((doc, index) => {
                     const data = doc.data();
-                    return {
-                        lat: data.origin_lat,
-                        lng: data.origin_long,
-                        index: index + 1,
-                        visible: true
-                    };
+                    const startLat = parseFloat(data.origin_lat);
+                    const startLng = parseFloat(data.origin_long);
+                    const endLat = parseFloat(data.destination_lat);
+                    const endLng = parseFloat(data.destination_long);
+
+                    // Check if origin coordinates are valid
+                    const hasValidOrigin = !isNaN(startLat) && !isNaN(startLng);
+                    // Check if destination coordinates are valid
+                    const hasValidDestination = !isNaN(endLat) && !isNaN(endLng);
+
+                    if (hasValidOrigin && hasValidDestination) {
+                        // Full route with destination - show as arc
+                        arcsData.push({
+                            startLat,
+                            startLng,
+                            endLat,
+                            endLng,
+                            index: index + 1,
+                            visible: true
+                        });
+                    } else if (hasValidOrigin) {
+                        // Only origin available - show as blinking point
+                        pointsData.push({
+                            lat: startLat,
+                            lng: startLng,
+                            index: index + 1,
+                            visible: true
+                        });
+                    } else {
+                        console.warn(`Invalid coordinates for route ${index + 1}:`, data);
+                    }
                 });
 
-                // Update globe with points
+                // Update globe with arcs and points
+                globe.arcsData(arcsData);
                 globe.pointsData(pointsData);
 
-                // Slow continuous blinking - toggle visibility every 1.5 seconds
+                // Blinking animation - toggle visibility every 1.5 seconds for 65 seconds
                 blinkInterval = setInterval(() => {
+                    arcsData.forEach(arc => {
+                        arc.visible = !arc.visible;
+                    });
                     pointsData.forEach(point => {
                         point.visible = !point.visible;
                     });
-                    globe.pointsData([...pointsData]); // Force re-render
+                    globe.arcsData([...arcsData]);
+                    globe.pointsData([...pointsData]);
                 }, 1500);
 
-                // Focus on the latest pin
+                // Stop blinking after 65 seconds
+                blinkTimeout = setTimeout(() => {
+                    if (blinkInterval) {
+                        clearInterval(blinkInterval);
+                        blinkInterval = null;
+                    }
+                    // Keep all visible (not blinking) after timeout
+                    arcsData.forEach(arc => {
+                        arc.visible = true;
+                    });
+                    pointsData.forEach(point => {
+                        point.visible = true;
+                    });
+                    globe.arcsData([...arcsData]);
+                    globe.pointsData([...pointsData]);
+                }, 65000);
+
+                // Focus on the latest route
                 const latestData = snapshot.docs[0].data();
+                const originLat = parseFloat(latestData.origin_lat);
+                const originLng = parseFloat(latestData.origin_long);
+                const destLat = parseFloat(latestData.destination_lat);
+                const destLng = parseFloat(latestData.destination_long);
+
+                // Use midpoint if destination exists, otherwise use origin
+                let focusLat = originLat;
+                let focusLng = originLng;
+                if (!isNaN(destLat) && !isNaN(destLng)) {
+                    focusLat = (originLat + destLat) / 2;
+                    focusLng = (originLng + destLng) / 2;
+                }
+
                 globe.pointOfView({
-                    lat: latestData.origin_lat,
-                    lng: latestData.origin_long,
-                    altitude: 0.8
+                    lat: !isNaN(focusLat) ? focusLat : 20,
+                    lng: !isNaN(focusLng) ? focusLng : 100,
+                    altitude: 1.5
                 }, 1500);
 
                 // Update last update time
@@ -113,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('last-update').textContent =
                     `Last updated: ${now.toLocaleTimeString()}`;
 
-                console.log('Route events fetched:', snapshot.docs.length, 'Total:', totalCount);
+                console.log('Route events fetched:', arcsData.length, 'arcs,', pointsData.length, 'points, Total:', totalCount);
             }
         } catch (error) {
             console.error('Error fetching route events:', error);
