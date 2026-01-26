@@ -1,0 +1,49 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0a"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Decorative circle left -->
+  <circle cx="0" cy="315" r="250" fill="#F86A28" opacity="0.06"/>
+
+  <!-- Lightning bolt icon - centered at x=450 to compensate for crop shift -->
+  <g transform="translate(410, 100)" filter="url(#glow)">
+    <path d="M50 0 L15 65 L40 65 L22 120 L85 48 L55 48 L78 0 Z" fill="#F86A28"/>
+  </g>
+
+  <!-- VoltPilot text - shift left to compensate -->
+  <text x="450" y="300" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="900" fill="#F86A28" text-anchor="middle" letter-spacing="-1">VoltPilot</text>
+
+  <!-- Tagline -->
+  <text x="450" y="360" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#E2E8F0" text-anchor="middle">EV Charger Finder &amp; Trip Planner</text>
+
+  <!-- Subtitle -->
+  <text x="450" y="410" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#9CA3AF" text-anchor="middle">Find verified chargers. Plan your trip.</text>
+
+  <!-- App store badges - moved left -->
+  <g transform="translate(270, 460)">
+    <rect x="0" y="0" width="150" height="45" rx="8" fill="#000000" stroke="#4B5563" stroke-width="1.5"/>
+    <text x="75" y="28" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="500" fill="#ffffff" text-anchor="middle">App Store</text>
+  </g>
+  <g transform="translate(480, 460)">
+    <rect x="0" y="0" width="150" height="45" rx="8" fill="#000000" stroke="#4B5563" stroke-width="1.5"/>
+    <text x="75" y="28" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="500" fill="#ffffff" text-anchor="middle">Google Play</text>
+  </g>
+
+  <!-- Bottom accent bar -->
+  <rect x="0" y="580" width="1200" height="50" fill="#F86A28"/>
+  <text x="450" y="612" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="600" fill="#121212" text-anchor="middle">voltpilot.app</text>
+</svg>

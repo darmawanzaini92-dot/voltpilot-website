@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
+    <title>VoltPilot - EV Charger Finder & Trip Planner | Find Electric Vehicle Charging Stations</title>
+    <meta name="description" content="VoltPilot helps you find verified EV charging stations and plan road trips with smart charging stops. No login required. Download free for iOS and Android.">
+    <meta name="keywords" content="EV charger finder, electric vehicle charging stations, EV trip planner, charging station map, electric car charger locator, EV road trip planner, Tesla charger finder, EV charging app">
+    <link rel="canonical" href="https://voltpilot.app/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://voltpilot.app/">
+    <meta property="og:title" content="VoltPilot - EV Charger Finder & Trip Planner">
+    <meta property="og:description" content="Find verified EV charging stations and plan road trips with smart charging stops. No login required, no tracking. Download free for iOS and Android.">
+    <meta property="og:image" content="https://voltpilot.app/og-image.png">
+    <meta property="og:site_name" content="VoltPilot">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://voltpilot.app/">
+    <meta name="twitter:title" content="VoltPilot - EV Charger Finder & Trip Planner">
+    <meta name="twitter:description" content="Find verified EV charging stations and plan road trips with smart charging stops. No login required. Download free for iOS and Android.">
+    <meta name="twitter:image" content="https://voltpilot.app/og-image.png">
+
+    <!-- Additional Meta -->
+    <meta name="author" content="VoltPilot">
+    <meta name="application-name" content="VoltPilot">
+    <meta name="theme-color" content="#F86A28">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VoltPilot">
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "MobileApplication",
+        "name": "VoltPilot",
+        "description": "EV Charger Finder & Trip Planner app that helps you find verified charging stations and plan road trips with smart charging stops.",
+        "applicationCategory": "TravelApplication",
+        "operatingSystem": "iOS, Android",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "1000"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "VoltPilot",
+            "url": "https://voltpilot.app",
+            "email": "info@voltpilot.app"
+        },
+        "keywords": "EV charger, electric vehicle, charging station, trip planner, road trip, EV app"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "VoltPilot",
+        "url": "https://voltpilot.app",
+        "description": "Find verified EV charging stations and plan road trips with smart charging stops.",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://voltpilot.app/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "VoltPilot",
+        "url": "https://voltpilot.app",
+        "logo": "https://voltpilot.app/logo.png",
+        "email": "info@voltpilot.app",
+        "sameAs": []
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Globe.GL for 3D Earth -->
+    <script src="https://unpkg.com/globe.gl"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#121212', // Deep Space Black
+                            primary: '#F86A28', // VoltPilot Orange
+                            accent: '#F86A28', // VoltPilot Orange
+                            text: '#E2E8F0',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+        /* Custom Glass Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Globe container */
+        #globe-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background: #000011;
+        }
+        #globe-container canvas {
+            outline: none;
+        }
+        /* 2D Blinking pin */
+        @keyframes slowBlink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.8); }
+        }
+        .map-pin {
+            width: 16px;
+            height: 16px;
+            background: #F86A28;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(248, 106, 40, 0.8);
+            cursor: pointer;
+        }
+        .map-pin.blinking {
+            animation: slowBlink 2s ease-in-out infinite;
+        }
+        /* Screen reader only - for accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body class="bg-brand-dark text-brand-text font-sans antialiased">
+
+    <noscript>
+        <div style="background: #F86A28; color: #121212; padding: 1rem; text-align: center;">
+            VoltPilot works best with JavaScript enabled. Some features like the live map may not work without it.
+        </div>
+    </noscript>
+
+    <header>
+    <nav class="fixed w-full z-50 glass" aria-label="Main navigation">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <img src="logo.png" alt="VoltPilot Logo" class="h-10 w-auto">
+                    <span class="text-[22px] font-black tracking-tight text-brand-primary" style="letter-spacing: -0.5px;">
+                        VoltPilot
+                    </span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#features" class="hover:text-brand-primary px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                        <a href="#contact" class="hover:text-brand-primary px-3 py-2 rounded-md text-sm font-medium">Support</a>
+                        <a href="#privacy" class="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Privacy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    </header>
+
+    <main>
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden" aria-labelledby="hero-title">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h1 id="hero-title" class="text-4xl tracking-tight font-extrabold text-white sm:text-6xl">
+                Your EV Co-Pilot. <br>
+                <span class="text-brand-primary">No more range anxiety.</span>
+            </h1>
+            <p class="mt-6 max-w-2xl mx-auto text-xl text-gray-400">
+                Find verified chargers, plan trips with charging stops, and navigate with your favorite maps app. No login required. No tracking. Just driving.
+            </p>
+            
+            <div class="mt-10 flex flex-wrap justify-center gap-4">
+                <!-- App Store Button -->
+                <a href="#" aria-label="Download VoltPilot on the App Store" class="flex items-center bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-900 transition border border-gray-700">
+                    <svg class="h-8 w-8 mr-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.5 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <div class="flex flex-col items-start">
+                        <span class="text-[10px] leading-tight">Download on the</span>
+                        <span class="text-lg font-semibold leading-tight">App Store</span>
+                    </div>
+                </a>
+                <!-- Google Play Button -->
+                <a href="#" aria-label="Get VoltPilot on Google Play" class="flex items-center bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-900 transition border border-gray-700">
+                    <svg class="h-8 w-8 mr-3" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="#4285F4" d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594z"/>
+                        <path fill="#34A853" d="M5.261 21.757c.193.19.478.302.783.302.217 0 .428-.058.625-.161l9.238-5.229-3.528-3.506z"/>
+                        <path fill="#FBBC04" d="M5.047 2.147A1.27 1.27 0 0 0 4.77 2.89v18.217c0 .288.097.55.257.764l8.378-8.323z"/>
+                        <path fill="#EA4335" d="M13.405 12.451l3.378-3.358-9.116-5.163a1.338 1.338 0 0 0-.606-.156 1.108 1.108 0 0 0-.783.326z"/>
+                    </svg>
+                    <div class="flex flex-col items-start">
+                        <span class="text-[10px] leading-tight">GET IT ON</span>
+                        <span class="text-lg font-semibold leading-tight">Google Play</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="mt-16 relative">
+                <div class="absolute inset-0 bg-brand-primary blur-3xl opacity-20 rounded-full"></div>
+                <!-- How to Use VoltPilot Infographic -->
+                <div class="relative glass rounded-2xl border border-gray-700 shadow-2xl mx-auto w-full max-w-5xl p-8 md:p-12">
+                    <h3 class="text-2xl font-bold text-white mb-8 text-center">How to Use VoltPilot</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+                        <!-- Step 1: Download -->
+                        <div class="flex flex-col items-center text-center relative">
+                            <div class="w-20 h-20 rounded-full bg-brand-primary/20 flex items-center justify-center mb-4 border-2 border-brand-primary">
+                                <svg class="w-10 h-10 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                            <span class="text-brand-primary font-bold text-lg">1</span>
+                            <h4 class="font-semibold text-white mt-1">Download</h4>
+                            <p class="text-sm text-gray-400 mt-2">Get VoltPilot from App Store or Google Play. No account required.</p>
+                            <!-- Arrow -->
+                            <svg class="hidden md:block absolute -right-4 top-8 w-6 h-6 text-brand-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                        <!-- Step 2: Find Chargers -->
+                        <div class="flex flex-col items-center text-center relative">
+                            <div class="w-20 h-20 rounded-full bg-brand-primary/20 flex items-center justify-center mb-4 border-2 border-brand-primary">
+                                <svg class="w-10 h-10 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <span class="text-brand-primary font-bold text-lg">2</span>
+                            <h4 class="font-semibold text-white mt-1">Find Chargers</h4>
+                            <p class="text-sm text-gray-400 mt-2">Browse thousands of verified charging stations on an interactive map.</p>
+                            <!-- Arrow -->
+                            <svg class="hidden md:block absolute -right-4 top-8 w-6 h-6 text-brand-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                        <!-- Step 3: Plan Route -->
+                        <div class="flex flex-col items-center text-center relative">
+                            <div class="w-20 h-20 rounded-full bg-brand-primary/20 flex items-center justify-center mb-4 border-2 border-brand-primary">
+                                <svg class="w-10 h-10 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                </svg>
+                            </div>
+                            <span class="text-brand-primary font-bold text-lg">3</span>
+                            <h4 class="font-semibold text-white mt-1">Plan Route</h4>
+                            <p class="text-sm text-gray-400 mt-2">Get smart route suggestions with charging stops based on your EV's range.</p>
+                            <!-- Arrow -->
+                            <svg class="hidden md:block absolute -right-4 top-8 w-6 h-6 text-brand-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                        <!-- Step 4: Navigate -->
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-20 h-20 rounded-full bg-brand-primary/20 flex items-center justify-center mb-4 border-2 border-brand-primary">
+                                <svg class="w-10 h-10 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                            <span class="text-brand-primary font-bold text-lg">4</span>
+                            <h4 class="font-semibold text-white mt-1">Navigate</h4>
+                            <p class="text-sm text-gray-400 mt-2">Open directions in Google Maps, Apple Maps, or Waze with one tap.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-20 bg-black/30" aria-labelledby="features-title">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 id="features-title" class="sr-only">Key Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-2xl glass hover:border-brand-primary/50 transition">
+                    <div class="w-12 h-12 bg-brand-primary/20 rounded-lg flex items-center justify-center text-brand-primary mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Instant Access</h3>
+                    <p class="text-gray-400">Download and start finding chargers immediately. No account creation, no sign-up forms, no friction.</p>
+                </div>
+
+                <div class="p-8 rounded-2xl glass hover:border-brand-primary/50 transition">
+                    <div class="w-12 h-12 bg-brand-primary/20 rounded-lg flex items-center justify-center text-brand-primary mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Verified Chargers</h3>
+                    <p class="text-gray-400">We aggregate data from OCM and cross-reference it to ensure the charger actually exists before you drive there.</p>
+                </div>
+
+                <div class="p-8 rounded-2xl glass hover:border-brand-primary/50 transition">
+                    <div class="w-12 h-12 bg-brand-primary/20 rounded-lg flex items-center justify-center text-brand-primary mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Private by Design</h3>
+                    <p class="text-gray-400">Your location data stays on your phone. We don't track your movements or sell your driving history.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Globe Section -->
+    <section id="live-map" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-white mb-4">Live Map</h2>
+                <p class="text-gray-400">Routes planned by users all over the world</p>
+                <p id="last-update" class="text-sm text-gray-500 mt-2"></p>
+            </div>
+            <div class="glass rounded-2xl p-4 border border-gray-700">
+                <div id="globe-container"></div>
+                <div id="coordinates-info" class="mt-4 text-center text-gray-400 text-sm"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-20">
+        <div class="max-w-3xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold text-white mb-8">Contact Support</h2>
+            <div class="glass p-8 rounded-2xl text-left">
+                <form action="https://formspree.io/f/mjggvlng" method="POST" class="space-y-6" aria-label="Contact support form">
+                    <div>
+                        <label for="contact-email" class="block text-sm font-medium text-gray-300 mb-2">Your Email</label>
+                        <input type="email" id="contact-email" name="email" required autocomplete="email" class="w-full bg-brand-dark border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none">
+                    </div>
+                    <div>
+                        <label for="contact-message" class="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                        <textarea id="contact-message" name="message" rows="4" required class="w-full bg-brand-dark border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-primary text-brand-dark font-bold py-3 rounded-lg hover:bg-white transition">
+                        Send Message
+                    </button>
+                </form>
+                <p class="mt-4 text-center text-sm text-gray-500">
+                    Or email us directly at <a href="mailto:info@voltpilot.app" class="text-brand-primary underline">info@voltpilot.app</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Policy Section -->
+    <section id="privacy" class="py-20 bg-black/30">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass rounded-2xl p-8 md:p-12 border border-gray-700">
+                <h2 class="text-3xl font-bold text-white mb-2">Privacy Policy for VoltPilot</h2>
+                <p class="text-gray-400 mb-2"><strong>Last Updated:</strong> January 25, 2025</p>
+                <p class="text-gray-400 mb-8"><strong>Effective Date:</strong> January 25, 2025</p>
+
+                <div class="space-y-8 text-gray-300">
+                    <!-- Introduction -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Introduction</h3>
+                        <p class="mb-3">VoltPilot ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application VoltPilot (the "App").</p>
+                        <p>Please read this Privacy Policy carefully. By using the App, you agree to the collection and use of information in accordance with this policy.</p>
+                    </div>
+
+                    <!-- Information We Collect -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Information We Collect</h3>
+
+                        <h4 class="text-lg font-semibold text-brand-primary mt-4 mb-2">1. Location Data</h4>
+                        <p class="mb-2">We collect location data to provide our core EV charger finding and route planning services:</p>
+                        <ul class="list-disc list-inside mb-3 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">Precise GPS Location:</strong> Your current location to find nearby charging stations</li>
+                            <li><strong class="text-gray-300">Route Coordinates:</strong> Origin and destination points when you plan routes</li>
+                            <li><strong class="text-gray-300">Search Locations:</strong> Places you search for within the app</li>
+                        </ul>
+                        <p class="mb-2"><strong class="text-white">How we use location data:</strong></p>
+                        <ul class="list-disc list-inside mb-3 space-y-1 text-gray-400">
+                            <li>Display EV chargers near your location</li>
+                            <li>Calculate distances to charging stations</li>
+                            <li>Plan routes between locations</li>
+                            <li>Improve search results</li>
+                        </ul>
+                        <p class="text-brand-primary font-medium">Location data is NOT permanently stored on our servers. It is only used during your active session and shared with third-party services as described below.</p>
+
+                        <h4 class="text-lg font-semibold text-brand-primary mt-6 mb-2">2. Analytics Data</h4>
+                        <p class="mb-2">We use Firebase Analytics to understand how our app is used and improve our services. We collect:</p>
+                        <ul class="list-disc list-inside mb-3 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">App Usage Events:</strong> Features you use, such as routes planned, chargers viewed, and filters applied</li>
+                            <li><strong class="text-gray-300">Device Information:</strong> Device model, operating system version, app version</li>
+                            <li><strong class="text-gray-300">Session Information:</strong> How long you use the app, when you use it</li>
+                            <li><strong class="text-gray-300">Error Information:</strong> Crash reports and API errors to improve stability</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-brand-primary mt-6 mb-2">3. Advertising Data</h4>
+                        <p class="mb-2">We display advertisements through Google AdMob. The advertising network may collect:</p>
+                        <ul class="list-disc list-inside mb-3 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">Advertising Identifiers:</strong> Google Advertising ID (Android) or Identifier for Advertisers (iOS)</li>
+                            <li><strong class="text-gray-300">Device Information:</strong> Device type, operating system</li>
+                            <li><strong class="text-gray-300">Ad Interaction Data:</strong> Ads viewed, clicked, or watched</li>
+                        </ul>
+                        <p class="mb-2"><strong class="text-white">Personalized Advertising:</strong></p>
+                        <ul class="list-disc list-inside space-y-1 text-gray-400">
+                            <li>In regions where required (EU/EEA/UK), we request your consent before showing personalized ads</li>
+                            <li>You can change your ad preferences at any time through the consent management option in the app</li>
+                            <li>If you decline personalized ads, you will still see ads, but they will be less relevant to you</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-brand-primary mt-6 mb-2">4. Purchase Data</h4>
+                        <p class="mb-2">If you subscribe to VoltPilot Pro, we use RevenueCat to manage subscriptions:</p>
+                        <ul class="list-disc list-inside mb-3 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">Transaction Information:</strong> Purchase date, subscription type, subscription status</li>
+                            <li><strong class="text-gray-300">Entitlement Status:</strong> Whether your Pro subscription is active</li>
+                        </ul>
+                        <p>We do NOT have access to your payment card details. All payments are processed securely through Apple App Store or Google Play Store.</p>
+
+                        <h4 class="text-lg font-semibold text-brand-primary mt-6 mb-2">5. Local Data</h4>
+                        <p class="mb-2">The following data is stored locally on your device only and is NOT transmitted to our servers:</p>
+                        <ul class="list-disc list-inside space-y-1 text-gray-400">
+                            <li>Favorite chargers list</li>
+                            <li>Saved routes</li>
+                            <li>App preferences (units, filters)</li>
+                            <li>Usage counters for free tier limits</li>
+                            <li>Cached AI analysis results (expires after 24 hours)</li>
+                        </ul>
+                    </div>
+
+                    <!-- How We Share Your Information -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">How We Share Your Information</h3>
+                        <p class="mb-4">We share your information with the following third-party service providers:</p>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Google Services</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">Google Maps Platform:</strong> Receives your location and search queries to provide maps, directions, and place search</li>
+                            <li><strong class="text-gray-300">Google Firebase Analytics:</strong> Receives analytics data to help us understand app usage</li>
+                            <li><strong class="text-gray-300">Google AdMob:</strong> Receives advertising identifiers and device information to serve ads</li>
+                            <li><strong class="text-gray-300">Google Generative AI (Gemini):</strong> Receives charger review text (not your personal data) to generate charger status summaries</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">EV Charger Data Providers</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">OpenChargeMap:</strong> Receives your location coordinates to find nearby EV chargers</li>
+                            <li><strong class="text-gray-300">ChargeTrip</strong> (Pro users only): Receives your location to provide verified charger availability data</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Purchase Management</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">RevenueCat:</strong> Receives purchase transaction data and device identifiers to manage your subscription</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">App Stores</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-400">
+                            <li><strong class="text-gray-300">Apple App Store / Google Play Store:</strong> Process your payments and manage app distribution</li>
+                        </ul>
+                    </div>
+
+                    <!-- Data Retention -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Data Retention</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-600">
+                                        <th class="py-2 pr-4 text-white">Data Type</th>
+                                        <th class="py-2 text-white">Retention Period</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-400">
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-2 pr-4">Location data</td>
+                                        <td class="py-2">Session only (not stored)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-2 pr-4">Analytics data</td>
+                                        <td class="py-2">Up to 26 months (Google standard)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-2 pr-4">Favorite chargers</td>
+                                        <td class="py-2">Until you delete them</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-2 pr-4">Saved routes</td>
+                                        <td class="py-2">Until you delete them</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-700">
+                                        <td class="py-2 pr-4">Purchase history</td>
+                                        <td class="py-2">Indefinitely (required for purchase restoration)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 pr-4">Cached data</td>
+                                        <td class="py-2">24 hours or less</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Your Rights and Choices -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Your Rights and Choices</h3>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Location Access</h4>
+                        <p class="mb-4">You can disable location access at any time through your device settings. Note that this will limit the app's core functionality.</p>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Advertising Preferences</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li>You can reset your advertising identifier in your device settings</li>
+                            <li>In applicable regions, you can manage ad personalization consent within the app</li>
+                            <li>You can opt out of personalized ads through your device's privacy settings</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Data Deletion</h4>
+                        <p class="mb-2">Since VoltPilot does not require an account, most of your data is stored locally on your device. To delete local data:</p>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li>Uninstall the app, or</li>
+                            <li>Clear app data through your device settings</li>
+                        </ul>
+                        <p class="mb-4">For analytics data deletion requests, please contact us at the email below.</p>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Do Not Track</h4>
+                        <p>Our app does not respond to "Do Not Track" signals. However, you can manage tracking preferences through your device settings and our consent management system.</p>
+                    </div>
+
+                    <!-- Children's Privacy -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Children's Privacy</h3>
+                        <p>VoltPilot is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us.</p>
+                    </div>
+
+                    <!-- International Data Transfers -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">International Data Transfers</h3>
+                        <p>Your information may be transferred to and processed in countries other than your own, including the United States, where our service providers (Google, RevenueCat) maintain servers. These countries may have different data protection laws. By using the App, you consent to such transfers.</p>
+                    </div>
+
+                    <!-- Security -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Security</h3>
+                        <p>We implement reasonable security measures to protect your information. However, no method of transmission over the Internet or electronic storage is 100% secure. We cannot guarantee absolute security.</p>
+                    </div>
+
+                    <!-- California Privacy Rights -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">California Privacy Rights (CCPA)</h3>
+                        <p class="mb-2">If you are a California resident, you have the right to:</p>
+                        <ul class="list-disc list-inside space-y-1 text-gray-400">
+                            <li>Know what personal information we collect</li>
+                            <li>Request deletion of your personal information</li>
+                            <li>Opt out of the sale of personal information (we do not sell personal information)</li>
+                            <li>Non-discrimination for exercising your rights</li>
+                        </ul>
+                    </div>
+
+                    <!-- European Privacy Rights -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">European Privacy Rights (GDPR)</h3>
+                        <p class="mb-2">If you are in the European Economic Area (EEA), United Kingdom, or Switzerland, you have the right to:</p>
+                        <ul class="list-disc list-inside mb-3 space-y-1 text-gray-400">
+                            <li>Access your personal data</li>
+                            <li>Rectify inaccurate data</li>
+                            <li>Request erasure of your data</li>
+                            <li>Restrict processing</li>
+                            <li>Data portability</li>
+                            <li>Object to processing</li>
+                            <li>Withdraw consent at any time</li>
+                        </ul>
+                        <p>To exercise these rights, contact us at the email below.</p>
+                    </div>
+
+                    <!-- Changes to This Privacy Policy -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Changes to This Privacy Policy</h3>
+                        <p>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy in the app and updating the "Last Updated" date. You are advised to review this Privacy Policy periodically.</p>
+                    </div>
+
+                    <!-- Contact Us -->
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3">Contact Us</h3>
+                        <p class="mb-2">If you have questions about this Privacy Policy or our data practices, please contact us at:</p>
+                        <p><strong class="text-brand-primary">Email:</strong> <a href="mailto:info@voltpilot.com" class="text-brand-primary hover:underline">info@voltpilot.com</a></p>
+                    </div>
+
+                    <!-- App Store Privacy Label -->
+                    <div class="border-t border-gray-700 pt-6 mt-6">
+                        <h3 class="text-xl font-bold text-white mb-3">App Store Privacy Label Information</h3>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Data Linked to You</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li>Location (for app functionality)</li>
+                            <li>Identifiers (for advertising)</li>
+                            <li>Usage Data (for analytics)</li>
+                            <li>Purchases (for subscription management)</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Data Not Linked to You</h4>
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-400">
+                            <li>Diagnostics (crash logs)</li>
+                        </ul>
+
+                        <h4 class="text-lg font-semibold text-gray-200 mb-2">Data Used to Track You</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-400">
+                            <li>Identifiers (advertising ID, with consent where required)</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-sm text-gray-500 italic mt-6">This privacy policy applies to the VoltPilot mobile application available on Apple App Store and Google Play Store.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <footer class="border-t border-gray-800 py-12 text-center">
+        <p class="text-gray-500 text-sm">
+            &copy; 2026 VoltPilot. All rights reserved. <br>
+            <a href="#privacy" class="underline hover:text-white">Privacy Policy</a>
+        </p>
+    </footer>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvZHrd6HmsJJWWqfbeb7BDeBdbAEawzEA",
+            authDomain: "wattway-a6a8c.firebaseapp.com",
+            projectId: "wattway-a6a8c",
+            storageBucket: "wattway-a6a8c.firebasestorage.app",
+            messagingSenderId: "528524286044",
+            appId: "1:528524286044:web:404bfecccd5f39f0276e99",
+            measurementId: "G-9J7G0RL617"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize 3D Globe
+            const globeContainer = document.getElementById('globe-container');
+
+            const globe = Globe()
+                .width(globeContainer.clientWidth)
+                .height(500)
+                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+                .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                .pointsData([])
+                .pointLat('lat')
+                .pointLng('lng')
+                .pointAltitude(0)
+                .pointRadius(0.3)
+                .pointColor(d => d.visible ? '#F86A28' : 'rgba(248,106,40,0.3)')
+                .pointLabel(d => `Route Origin ${d.index}<br>Lat: ${d.lat.toFixed(4)}, Lng: ${d.lng.toFixed(4)}`)
+                (globeContainer);
+
+            // Set initial view
+            globe.pointOfView({ lat: 20, lng: 100, altitude: 0.8 });
+
+            // Very slow auto-rotation
+            const controls = globe.controls();
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.1;
+            controls.enableZoom = true;
+
+            // Track points data and blink interval
+            let pointsData = [];
+            let blinkInterval = null;
+
+            // Get total count of all route_planned_events
+            async function getTotalRouteCount() {
+                try {
+                    const snapshot = await db.collection('route_planned_events').get();
+                    return snapshot.size;
+                } catch (error) {
+                    console.error('Error getting count:', error);
+                    return 0;
+                }
+            }
+
+            // Fetch latest 10 route_planned_events from Firestore
+            async function fetchLatestRouteEvents() {
+                try {
+                    // Get total count
+                    const totalCount = await getTotalRouteCount();
+
+                    const snapshot = await db.collection('route_planned_events')
+                        .orderBy('timestamp', 'desc')
+                        .limit(10)
+                        .get();
+
+                    // Update total count display
+                    document.getElementById('coordinates-info').innerHTML =
+                        `<span class="text-brand-primary text-lg font-semibold">Total routes planned with VoltPilot: </span><span class="text-white text-xl font-bold">${totalCount.toLocaleString()}</span>`;
+
+                    if (!snapshot.empty) {
+                        // Clear previous blink interval
+                        if (blinkInterval) {
+                            clearInterval(blinkInterval);
+                        }
+
+                        // Create points data for pins
+                        pointsData = snapshot.docs.map((doc, index) => {
+                            const data = doc.data();
+                            return {
+                                lat: data.origin_lat,
+                                lng: data.origin_long,
+                                index: index + 1,
+                                visible: true
+                            };
+                        });
+
+                        // Update globe with points
+                        globe.pointsData(pointsData);
+
+                        // Slow continuous blinking - toggle visibility every 1.5 seconds
+                        blinkInterval = setInterval(() => {
+                            pointsData.forEach(point => {
+                                point.visible = !point.visible;
+                            });
+                            globe.pointsData([...pointsData]); // Force re-render
+                        }, 1500);
+
+                        // Focus on the latest pin
+                        const latestData = snapshot.docs[0].data();
+                        globe.pointOfView({
+                            lat: latestData.origin_lat,
+                            lng: latestData.origin_long,
+                            altitude: 0.8
+                        }, 1500);
+
+                        // Update last update time
+                        const now = new Date();
+                        document.getElementById('last-update').textContent =
+                            `Last updated: ${now.toLocaleTimeString()}`;
+
+                        console.log('Route events fetched:', snapshot.docs.length, 'Total:', totalCount);
+                    }
+                } catch (error) {
+                    console.error('Error fetching route events:', error);
+                    document.getElementById('coordinates-info').innerHTML =
+                        '<span class="text-red-400">Error loading route data</span>';
+                }
+            }
+
+            // Initial fetch
+            fetchLatestRouteEvents();
+
+            // Refresh every 60 seconds
+            setInterval(fetchLatestRouteEvents, 60000);
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                globe.width(globeContainer.clientWidth);
+            });
+        });
+    </script>
+</body>
+</html>
