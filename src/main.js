@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const snapshot = await db.collection('route_planned_events')
                 .orderBy('timestamp', 'desc')
-                .limit(10)
+                .limit(20)
                 .get();
 
             // Update total count display
