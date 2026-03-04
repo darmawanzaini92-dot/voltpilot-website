@@ -32,6 +32,11 @@ No test runner or linter is configured.
 - **Theme**: Deep space black (`#121212`), VoltPilot Orange (`#F86A28`), glass-morphism effects
 - **Contact form**: Handled by Formspree (no backend needed)
 
+## App Store URLs
+
+- **iOS**: https://apps.apple.com/app/voltpilot/id6758271158 (Apple ID: 6758271158)
+- **Android**: https://play.google.com/store/apps/details?id=com.wawanz.voltpilot (Bundle ID: com.wawanz.voltpilot)
+
 ## Firestore Data Model
 
 Collection `route_planned_events`:
